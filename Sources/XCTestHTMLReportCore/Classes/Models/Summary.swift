@@ -92,16 +92,30 @@ public struct Summary {
     }
 
     public func getFailingSnapshotTests() -> [FailedSnapshotTest] {
-        runs.first?.allTests.filter { $0.status == .failure }.map {
-            FailedSnapshotTest(
-                id: $0.identifier,
-                mimeType: $0.allAttachments.first(where: { $0.name?.rawValue == "reference" })?.type
-                    .mimeType,
-                referenceImage: $0.allAttachments.getData(with: "reference"),
-                failureImage: $0.allAttachments.getData(with: "failure"),
-                diffImage: $0.allAttachments.getData(with: "difference")
-            )
+        runs.first?.allTests.filter { $0.status == .failure }.compactMap {
+            let screenshots = $0.allAttachments.filter({ $0.isScreenshot })
+            let reference = screenshots.first { $0.name?.rawValue == "reference" } ?? screenshots.first
+
+            return reference == nil || screenshots.count != 3
+                ? nil
+                : FailedSnapshotTest(
+                    id: $0.identifier,
+                    mimeType: reference?.type.mimeType,
+                    referenceImage: screenshots.getData(with: "reference") ?? screenshots[0].getData(),
+                    failureImage: screenshots.getData(with: "failure") ?? screenshots[1].getData(),
+                    diffImage: screenshots.getData(with: "difference") ?? screenshots[2].getData()
+                )
         } ?? []
+    }
+}
+
+extension Attachment {
+    func getData() -> Data? {
+        if case .data(let data) = content {
+            return data
+        }
+
+        return nil
     }
 }
 
@@ -110,7 +124,7 @@ extension [Attachment] {
         let content = first { $0.name?.rawValue == name && $0.isScreenshot }?
             .content
 
-        if case let .data(data) = content {
+        if case .data(let data) = content {
             return data
         }
 
@@ -135,7 +149,7 @@ extension Summary: HTML {
         return [
             "DEVICES": runs.map(\.runDestination.html).joined(),
             "RESULT_CLASS": resultClass,
-            "RUNS": runs.map(\.html).joined(),
+            "RUNS": runs.map(\.html).joined()
         ]
     }
 }
