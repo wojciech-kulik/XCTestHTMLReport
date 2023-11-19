@@ -18,7 +18,12 @@ public struct Summary {
         case linking
     }
 
-    public init(resultPaths: [String], renderingMode: RenderingMode, downsizeImagesEnabled: Bool, downsizeScaleFactor: CGFloat) {
+    public init(
+        resultPaths: [String],
+        renderingMode: RenderingMode,
+        downsizeImagesEnabled: Bool,
+        downsizeScaleFactor: CGFloat
+    ) {
         var runs: [Run] = []
         var resultFiles: [ResultFile] = []
 
@@ -76,6 +81,40 @@ public struct Summary {
 
         // TODO: The result files may be encoded directly as an array instead of concatenating raw output
         return "[\(jsonStrings.joined(separator: ","))]"
+    }
+
+    public struct FailedSnapshotTest {
+        public let id: String
+        public let mimeType: String?
+        public let referenceImage: Data?
+        public let failureImage: Data?
+        public let diffImage: Data?
+    }
+
+    public func getFailingSnapshotTests() -> [FailedSnapshotTest] {
+        runs.first?.allTests.filter { $0.status == .failure }.map {
+            FailedSnapshotTest(
+                id: $0.identifier,
+                mimeType: $0.allAttachments.first(where: { $0.name?.rawValue == "reference" })?.type
+                    .mimeType,
+                referenceImage: $0.allAttachments.getData(with: "reference"),
+                failureImage: $0.allAttachments.getData(with: "failure"),
+                diffImage: $0.allAttachments.getData(with: "difference")
+            )
+        } ?? []
+    }
+}
+
+extension [Attachment] {
+    func getData(with name: String) -> Data? {
+        let content = first { $0.name?.rawValue == name && $0.isScreenshot }?
+            .content
+
+        if case let .data(data) = content {
+            return data
+        }
+
+        return nil
     }
 }
 
