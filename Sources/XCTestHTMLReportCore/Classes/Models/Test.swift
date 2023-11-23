@@ -79,8 +79,7 @@ public struct TestGroup: Test {
     var descendantSubTests: [Test] {
         subTests.flatMap { subTest -> [Test] in
             if let testSummaryGroup = subTest as? TestGroup,
-               !testSummaryGroup.subTests.isEmpty
-            {
+               !testSummaryGroup.subTests.isEmpty {
                 return testSummaryGroup.descendantSubTests
             }
             return [subTest]
@@ -94,12 +93,12 @@ public struct TestGroup: Test {
         downsizeImagesEnabled: Bool,
         downsizeScaleFactor: CGFloat
     ) {
-        title = group.name ?? "---group-name-not-found---"
-        identifier = group.identifier ?? "---group-identifier-not-found---"
-        duration = group.duration
+        self.title = group.name ?? "---group-name-not-found---"
+        self.identifier = group.identifier ?? "---group-identifier-not-found---"
+        self.duration = group.duration
 
         if group.subtests.isEmpty {
-            subTests = group.subtestGroups.map { TestGroup(
+            self.subTests = group.subtestGroups.map { TestGroup(
                 group: $0,
                 resultFile: resultFile,
                 renderingMode: renderingMode,
@@ -107,7 +106,7 @@ public struct TestGroup: Test {
                 downsizeScaleFactor: downsizeScaleFactor
             ) }
         } else {
-            subTests = Array(group.subtests.reduce(into: Set<TestCase>()) { subTestSet, metadata in
+            self.subTests = Array(group.subtests.reduce(into: Set<TestCase>()) { subTestSet, metadata in
                 let newTest = TestCase(
                     metadata: metadata,
                     resultFile: resultFile,
@@ -134,7 +133,7 @@ extension TestGroup {
         "DURATION": duration.formattedSeconds,
         "ICON_CLASS": status.cssClass,
         "ITEM_CLASS": objectClass.cssClass,
-        "SUB_TESTS": subTests.reduce("") { $0 + $1.html },
+        "SUB_TESTS": subTests.reduce("") { $0 + $1.html }
     ] }
 
     var htmlTemplate: String { HTMLTemplates.testGroup }
@@ -157,6 +156,9 @@ struct TestCase: Test {
     let title: String
     let identifier: String
     var objectClass: ObjectClass = .testSummary
+    var filePath: String?
+    var lineNumber: Int?
+    var message: String?
     var duration: TimeInterval {
         iterations.reduce(0) { $0 + $1.duration }
     }
@@ -168,8 +170,7 @@ struct TestCase: Test {
         let statusCountMap = iterationStatusCount()
 
         if statusCountMap.count == 1,
-           let first = statusCountMap.first
-        {
+           let first = statusCountMap.first {
             return first.key
         }
 
@@ -200,10 +201,19 @@ struct TestCase: Test {
         downsizeImagesEnabled: Bool,
         downsizeScaleFactor: CGFloat
     ) {
-        title = metadata.name ?? ""
-        identifier = metadata.identifier ?? ""
+        let testSummary = metadata.summaryRef.flatMap {
+            resultFile.getActionTestSummary(id: $0.id)?
+                .failureSummaries
+                .first
+        }
 
-        iterations = [Iteration(
+        self.title = metadata.name ?? ""
+        self.identifier = metadata.identifier ?? ""
+        self.filePath = testSummary?.sourceCodeContext?.location?.filePath
+        self.lineNumber = testSummary?.sourceCodeContext?.location?.lineNumber
+        self.message = testSummary?.message
+
+        self.iterations = [Iteration(
             metadata: metadata,
             resultFile: resultFile,
             renderingMode: renderingMode,
@@ -228,7 +238,7 @@ extension TestCase {
                     .accumulateHTMLAsString ?? "",
                 "SCREENSHOT_FLOW": iteration.testScreenshotFlow?.screenshots
                     .accumulateHTMLAsString ?? "",
-                "ACTIVITIES": iteration.activities.accumulateHTMLAsString,
+                "ACTIVITIES": iteration.activities.accumulateHTMLAsString
             ]
         } else {
             return [
@@ -239,7 +249,7 @@ extension TestCase {
                 "ITEM_CLASS": objectClass.cssClass,
                 "ITERATIONS": iterations.reduce("") { $0 + $1.html },
                 "RESULT_STRING": iterationStatusCount().map { "\($0.value) \($0.key.cssClass)" }
-                    .joined(separator: ", "),
+                    .joined(separator: ", ")
                 // Add something for repetition policy/results breakdown
             ]
         }

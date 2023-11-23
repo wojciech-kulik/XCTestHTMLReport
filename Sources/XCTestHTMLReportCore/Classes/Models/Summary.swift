@@ -91,9 +91,25 @@ public struct Summary {
         public let diffImage: Data?
     }
 
+    public struct FailedTest {
+        public let id: String
+        public let filePath: String?
+        public let lineNumber: Int?
+        public let message: String?
+    }
+
+    public func getFailingTests() -> [FailedTest] {
+        runs.first?.allTests
+            .filter { $0.status == .failure }
+            .compactMap { $0 as? TestCase }
+            .map {
+                FailedTest(id: $0.identifier, filePath: $0.filePath, lineNumber: $0.lineNumber, message: $0.message)
+            } ?? []
+    }
+
     public func getFailingSnapshotTests() -> [FailedSnapshotTest] {
         runs.first?.allTests.filter { $0.status == .failure }.compactMap {
-            let screenshots = $0.allAttachments.filter({ $0.isScreenshot })
+            let screenshots = $0.allAttachments.filter(\.isScreenshot)
             let reference = screenshots.first { $0.name?.rawValue == "reference" } ?? screenshots.first
 
             return reference == nil || screenshots.count != 3
