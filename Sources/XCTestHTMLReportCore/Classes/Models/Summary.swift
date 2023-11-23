@@ -83,7 +83,7 @@ public struct Summary {
         return "[\(jsonStrings.joined(separator: ","))]"
     }
 
-    public struct FailedSnapshotTest {
+    public struct FailedSnapshotTest: Codable {
         public let id: String
         public let mimeType: String?
         public let referenceImage: Data?
@@ -91,7 +91,7 @@ public struct Summary {
         public let diffImage: Data?
     }
 
-    public struct FailedTest {
+    public struct FailedTest: Codable {
         public let id: String
         public let filePath: String?
         public let lineNumber: Int?
