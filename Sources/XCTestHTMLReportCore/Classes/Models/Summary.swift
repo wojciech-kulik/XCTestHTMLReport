@@ -91,21 +91,35 @@ public struct Summary {
         public let diffImage: Data?
     }
 
-    public struct FailedTest: Codable {
+    public struct TestResult: Codable {
         public let id: String
         public let filePath: String?
         public let lineNumber: Int?
         public let message: String?
+        public let status: String
+        public let duration: TimeInterval
     }
 
-    public func getFailingTests() -> [FailedTest] {
+    public func getFailingTests() -> [TestResult] {
+        getTests().filter { $0.status == "Failure" }
+    }
+
+    public func getTests() -> [TestResult] {
         runs.first?.allTests
             .filter { $0.status == .failure }
             .compactMap { $0 as? TestCase }
             .map {
-                FailedTest(id: $0.identifier, filePath: $0.filePath, lineNumber: $0.lineNumber, message: $0.message)
+                TestResult(
+                    id: $0.identifier,
+                    filePath: $0.filePath,
+                    lineNumber: $0.lineNumber,
+                    message: $0.message,
+                    status: $0.status.rawValue,
+                    duration: $0.duration
+                )
             } ?? []
     }
+
 
     public func getFailingSnapshotTests() -> [FailedSnapshotTest] {
         runs.first?.allTests.filter { $0.status == .failure }.compactMap {
