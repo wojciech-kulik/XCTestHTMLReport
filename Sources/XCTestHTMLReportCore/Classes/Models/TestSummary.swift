@@ -13,6 +13,8 @@ struct TestSummary: HTML {
     let uuid: String
     let testName: String
     let tests: [TestGroup]
+    let identifierUrl: String
+    let projectRelativePath: String
     var status: Status {
         let currentTests = tests
         var status: Status = .unknown
@@ -50,6 +52,8 @@ struct TestSummary: HTML {
     ) {
         uuid = UUID().uuidString
         testName = summary.targetName ?? ""
+        identifierUrl = summary.identifierURL ?? ""
+        projectRelativePath = summary.projectRelativePath ?? ""
         // TODO: Reduce this with iterations & accum with hashmap
         tests = summary.tests.map {
             TestGroup(
