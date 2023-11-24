@@ -100,23 +100,12 @@ public struct Summary {
         public let duration: TimeInterval
     }
 
-    public struct TestTarget: Codable {
-        let name: String
-        let identifierUrl: String
-        let projectRelativePath: String
-    }
-
-    public struct TestResults: Codable {
-        public let tests: [TestResult]
-        public let targets: [TestTarget]
-    }
-
     public func getFailingTests() -> [TestResult] {
-        getTests().tests.filter { $0.status == "Failure" }
+        getTests().filter { $0.status == "Failure" }
     }
 
-    public func getTests() -> TestResults {
-        let tests = runs.first?.allTests
+    public func getTests() -> [TestResult] {
+        runs.first?.allTests
             .compactMap { $0 as? TestCase }
             .map {
                 TestResult(
@@ -128,18 +117,7 @@ public struct Summary {
                     duration: $0.duration
                 )
             } ?? []
-
-        let targets = runs.first?.testSummaries.map {
-            TestTarget(
-                name: $0.testName,
-                identifierUrl: $0.identifierUrl,
-                projectRelativePath: $0.projectRelativePath
-            )
-        } ?? []
-
-        return .init(tests: tests, targets: targets)
     }
-
 
     public func getFailingSnapshotTests() -> [FailedSnapshotTest] {
         runs.first?.allTests.filter { $0.status == .failure }.compactMap {
