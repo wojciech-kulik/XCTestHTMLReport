@@ -155,6 +155,7 @@ struct TestCase: Test {
     let uuid = UUID().uuidString
     let title: String
     let identifier: String
+    let identifierUrl: String?
     var objectClass: ObjectClass = .testSummary
     var filePath: String?
     var lineNumber: Int?
@@ -209,6 +210,7 @@ struct TestCase: Test {
 
         self.title = metadata.name ?? ""
         self.identifier = metadata.identifier ?? ""
+        self.identifierUrl = metadata.identifierURL
         self.filePath = testSummary?.sourceCodeContext?.location?.filePath
         self.lineNumber = testSummary?.sourceCodeContext?.location?.lineNumber
         self.message = testSummary?.message

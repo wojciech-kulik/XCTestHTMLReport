@@ -93,6 +93,7 @@ public struct Summary {
 
     public struct TestResult: Codable {
         public let id: String
+        public let idUrl: String?
         public let filePath: String?
         public let lineNumber: Int?
         public let message: String?
@@ -110,6 +111,7 @@ public struct Summary {
             .map {
                 TestResult(
                     id: $0.identifier,
+                    idUrl: $0.identifierUrl,
                     filePath: $0.filePath,
                     lineNumber: $0.lineNumber,
                     message: $0.message,
