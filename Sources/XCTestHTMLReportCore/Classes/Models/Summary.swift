@@ -106,7 +106,6 @@ public struct Summary {
 
     public func getTests() -> [TestResult] {
         runs.first?.allTests
-            .filter { $0.status == .failure }
             .compactMap { $0 as? TestCase }
             .map {
                 TestResult(
