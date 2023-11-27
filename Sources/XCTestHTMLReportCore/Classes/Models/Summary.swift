@@ -144,9 +144,11 @@ public struct Summary {
                     failures.count == differences.count
                 else { return [] }
 
-                return (0..<references.count).map {
+                let snapshotsCount = references.count
+
+                return (0..<snapshotsCount).map {
                     FailedSnapshotTest(
-                        id: "\(test.identifier)_\($0)",
+                        id: snapshotsCount == 1 ? test.identifier : "\(test.identifier)_\($0 + 1)",
                         mimeType: reference.type.mimeType,
                         referenceImage: references[$0].getData(),
                         failureImage: failures[$0].getData(),
