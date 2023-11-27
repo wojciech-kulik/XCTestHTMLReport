@@ -120,37 +120,40 @@ public struct Summary {
     }
 
     public func getFailingSnapshotTests() -> [FailedSnapshotTest] {
-        runs.first?.allTests.filter { $0.status == .failure }.flatMap { test -> [FailedSnapshotTest] in
-            let screenshots = test.allAttachments
-                .filter(\.isScreenshot)
-            let reference = screenshots.first { $0.name?.rawValue == "reference" } ?? screenshots.first
+        runs.first?.allTests
+            .filter { $0.status == .failure }
+            .flatMap { test -> [FailedSnapshotTest] in
+                let screenshots = test.allAttachments.filter(\.isScreenshot)
+                let reference = screenshots.first { $0.name?.rawValue == "reference" } ?? screenshots.first
 
-            let references = screenshots.filter { $0.name?.rawValue == "reference" }
-            let failures = screenshots.filter { $0.name?.rawValue == "failure" }
-            let differences = screenshots.filter { $0.name?.rawValue == "difference" }
+                guard let reference else { return [] }
 
-            guard 
-                let reference,
-                references.count == failures.count,
-                failures.count == differences.count
-            else { return [] }
+                var references = screenshots.filter { $0.name?.rawValue == "reference" }
+                var failures = screenshots.filter { $0.name?.rawValue == "failure" }
+                var differences = screenshots.filter { $0.name?.rawValue == "difference" }
 
-            var tests: [FailedSnapshotTest] = []
+                // On macOS there are no names like reference, failure or difference. We need to rely on the order.
+                if references.isEmpty {
+                    references = screenshots.enumerated().filter { index, _ in index % 3 == 0 }.map(\.element)
+                    failures = screenshots.enumerated().filter { index, _ in index % 3 == 1 }.map(\.element)
+                    differences = screenshots.enumerated().filter { index, _ in index % 3 == 2 }.map(\.element)
+                }
 
-            for currentSnap in 0..<references.count {
-                tests.append(
+                guard
+                    references.count == failures.count,
+                    failures.count == differences.count
+                else { return [] }
+
+                return (0..<references.count).map {
                     FailedSnapshotTest(
-                        id: "\(test.identifier).\(currentSnap)",
+                        id: "\(test.identifier)_\($0)",
                         mimeType: reference.type.mimeType,
-                        referenceImage: references[currentSnap].getData(),
-                        failureImage: failures[currentSnap].getData(),
-                        diffImage: differences[currentSnap].getData()
+                        referenceImage: references[$0].getData(),
+                        failureImage: failures[$0].getData(),
+                        diffImage: differences[$0].getData()
                     )
-                )
-            }
-
-            return tests
-        } ?? []
+                }
+            } ?? []
     }
 }
 
