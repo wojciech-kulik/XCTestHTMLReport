@@ -120,19 +120,36 @@ public struct Summary {
     }
 
     public func getFailingSnapshotTests() -> [FailedSnapshotTest] {
-        runs.first?.allTests.filter { $0.status == .failure }.compactMap {
-            let screenshots = $0.allAttachments.filter(\.isScreenshot)
+        runs.first?.allTests.filter { $0.status == .failure }.flatMap { test -> [FailedSnapshotTest] in
+            let screenshots = test.allAttachments
+                .filter(\.isScreenshot)
             let reference = screenshots.first { $0.name?.rawValue == "reference" } ?? screenshots.first
 
-            return reference == nil || screenshots.count != 3
-                ? nil
-                : FailedSnapshotTest(
-                    id: $0.identifier,
-                    mimeType: reference?.type.mimeType,
-                    referenceImage: screenshots.getData(with: "reference") ?? screenshots[0].getData(),
-                    failureImage: screenshots.getData(with: "failure") ?? screenshots[1].getData(),
-                    diffImage: screenshots.getData(with: "difference") ?? screenshots[2].getData()
+            let references = screenshots.filter { $0.name?.rawValue == "reference" }
+            let failures = screenshots.filter { $0.name?.rawValue == "failure" }
+            let differences = screenshots.filter { $0.name?.rawValue == "difference" }
+
+            guard 
+                let reference,
+                references.count == failures.count,
+                failures.count == differences.count
+            else { return [] }
+
+            var tests: [FailedSnapshotTest] = []
+
+            for currentSnap in 0..<references.count {
+                tests.append(
+                    FailedSnapshotTest(
+                        id: "\(test.identifier).\(currentSnap)",
+                        mimeType: reference.type.mimeType,
+                        referenceImage: references[currentSnap].getData(),
+                        failureImage: failures[currentSnap].getData(),
+                        diffImage: differences[currentSnap].getData()
+                    )
                 )
+            }
+
+            return tests
         } ?? []
     }
 }
