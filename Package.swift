@@ -15,8 +15,8 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/onevcat/Rainbow.git", .upToNextMajor(from: "3.0.0")),
         .package(
-            url: "https://github.com/tylervick/XCResultKit.git",
-            revision: "d5462510fc09055594b3cf472e443bee0d130043"
+            url: "https://github.com/davidahouse/XCResultKit.git",
+            from: "1.2.1"
         ),
         .package(url: "https://github.com/scinfu/SwiftSoup.git", from: "2.4.3"),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.0"),

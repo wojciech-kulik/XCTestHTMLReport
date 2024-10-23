@@ -39,11 +39,11 @@
       },
       {
         "package": "XCResultKit",
-        "repositoryURL": "https://github.com/tylervick/XCResultKit.git",
+        "repositoryURL": "https://github.com/davidahouse/XCResultKit.git",
         "state": {
           "branch": null,
-          "revision": "d5462510fc09055594b3cf472e443bee0d130043",
-          "version": null
+          "revision": "4d13c245f374d9af67fb9260cd14a4d58f6c6c82",
+          "version": "1.2.1"
         }
       }
     ]
